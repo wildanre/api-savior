@@ -1,0 +1,30 @@
+{
+  "name": "rest-express",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "build": "prisma generate",
+    "start": "node index.js",
+    "vercel-build": "npm run build"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "vercel": "^39.1.2"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.0",
+    "@types/node": "22.10.1",
+    "prisma": "5.22.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.7.2"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.ts"
+  }
+}

@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int         @id @default(autoincrement())
+  name        String
+  email       String      @unique
+  password    String
+  role        String      @default("user")
+  phoneNumber String?
+  address     String?
+  age         Int?
+  point       Int         @default(0)
+  gender      String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  Penukaran   Penukaran[]
+}
+
+model Toko {
+  id       String   @id @default(uuid()) @map("_id")
+  nama     String
+  alamat   String
+  imageUrl String
+  barang   Barang[] @relation("Toko")
+}
+
+model Barang {
+  id       String @id @default(uuid()) @map("_id")
+  nama     String
+  harga    Int
+  stok     Int
+  imageUrl String
+  toko     Toko   @relation("Toko", fields: [tokoId], references: [id])
+  tokoId   String
+}
+
+model BankSampah {
+  id        String      @id @default(uuid()) @map("_id")
+  name      String
+  location  String
+  sampah    Sampah[]
+  Penukaran Penukaran[]
+}
+
+model Sampah {
+  id           String      @id @default(uuid()) @map("_id")
+  category     String
+  price        Int
+  bankSampahId String
+  bankSampah   BankSampah  @relation(fields: [bankSampahId], references: [id])
+  Penukaran    Penukaran[]
+}
+
+model Penukaran {
+  id           String     @id @default(uuid())
+  name         User       @relation(fields: [userId], references: [id])
+  userId       Int
+  category     Sampah     @relation(fields: [sampahId], references: [id])
+  sampahId     String
+  bankSampah   BankSampah @relation(fields: [bankSampahId], references: [id])
+  bankSampahId String
+  amount       Int
+  earned       Int
+  status       String     @default("pending") // ["pending", "success", "cancelled"]
+  dateCreated  DateTime   @default(now())
+  dateUpdated  DateTime   @updatedAt
+}     
+
+      
