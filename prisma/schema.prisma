@@ -21,6 +21,7 @@ model User {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   Penukaran   Penukaran[]
+  Pelaporan   Pelaporan[]
 }
 
 model Toko {
@@ -71,6 +72,17 @@ model Penukaran {
   status       String     @default("pending") // ["pending", "success", "cancelled"]
   dateCreated  DateTime   @default(now())
   dateUpdated  DateTime   @updatedAt
-}     
+}
 
-      
+model Pelaporan {
+  id          String   @id @default(uuid()) @map("_id")
+  name        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  judul       String
+  address     String
+  description String
+  status      String   @default("sent") // ["sent", "reviewed", "completed", "rejected"]
+  imageUrl    String
+  dateCreated DateTime @default(now())
+  dateUpdated DateTime @updatedAt
+}

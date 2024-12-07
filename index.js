@@ -397,6 +397,98 @@ app.delete('/sampah/:id', async (req, res) => {
   }
 });
 
+// CRUD for Pelaporan
+app.post('/pelaporan', async (req, res) => {
+  const { userId, judul, address, description, imageUrl } = req.body;
+
+  if (!userId || !judul || !address || !description || !imageUrl) {
+    return res.status(400).json({ error: 'User ID, judul, address, description, and imageUrl are required.' });
+  }
+
+  try {
+    const pelaporan = await prisma.pelaporan.create({
+      data: {
+        userId,
+        judul,
+        address,
+        description,
+        imageUrl,
+      },
+    });
+    res.status(201).json({ message: 'Pelaporan created successfully.', pelaporan });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create Pelaporan.', details: error.message });
+  }
+});
+
+app.get('/pelaporan', async (req, res) => {
+  try {
+    const pelaporans = await prisma.pelaporan.findMany({
+      include: {
+        name: true, // Include user info if needed
+      },
+    });
+    res.json(pelaporans);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch Pelaporan.', details: error.message });
+  }
+});
+
+app.put('/pelaporan/:id', async (req, res) => {
+  const { id } = req.params;
+  const { judul, address, description, imageUrl, status } = req.body;
+
+  try {
+    const pelaporan = await prisma.pelaporan.update({
+      where: { id: parseInt(id) },
+      data: {
+        judul,
+        address,
+        description,
+        imageUrl,
+        status: status || 'sent', // Default status to 'sent' if not provided
+      },
+    });
+    res.json({ message: 'Pelaporan updated successfully.', pelaporan });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update Pelaporan.', details: error.message });
+  }
+});
+
+app.delete('/pelaporan/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.pelaporan.delete({
+      where: { id: parseInt(id) },
+    });
+    res.json({ message: 'Pelaporan deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete Pelaporan.', details: error.message });
+  }
+});
+
+app.get('/pelaporan/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pelaporan = await prisma.pelaporan.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        name: true, // Include user info if needed
+      },
+    });
+
+    if (!pelaporan) {
+      return res.status(404).json({ error: 'Pelaporan not found.' });
+    }
+
+    res.json(pelaporan);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch Pelaporan details.', details: error.message });
+  }
+});
+
 const server = app.listen(3000, () =>
   console.log(`
 🚀 Server ready at: http://localhost:3000
