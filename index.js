@@ -399,7 +399,7 @@ app.delete('/sampah/:id', async (req, res) => {
 
 // CRUD for Pelaporan
 app.post('/pelaporan', async (req, res) => {
-  const { userId, judul, address, description, imageUrl } = req.body;
+  const { name, userId, judul, address, description, imageUrl } = req.body;
 
   if (!userId || !judul || !address || !description || !imageUrl) {
     return res.status(400).json({ error: 'User ID, judul, address, description, and imageUrl are required.' });
@@ -408,6 +408,7 @@ app.post('/pelaporan', async (req, res) => {
   try {
     const pelaporan = await prisma.pelaporan.create({
       data: {
+        name,
         userId,
         judul,
         address,
@@ -435,38 +436,44 @@ app.get('/pelaporan', async (req, res) => {
 });
 
 app.put('/pelaporan/:id', async (req, res) => {
-  const { id } = req.params;
-  const { judul, address, description, imageUrl, status } = req.body;
+  const { id } = req.params; // UUID tetap dalam format string
+  const updateData = req.body;
 
   try {
+    // Validasi status
+    const validStatuses = ['sent', 'reviewed', 'completed', 'rejected'];
+    if (updateData.status && !validStatuses.includes(updateData.status)) {
+      return res.status(400).json({ error: 'Invalid status value.' });
+    }
+
+    // Update data
     const pelaporan = await prisma.pelaporan.update({
-      where: { id: parseInt(id) },
-      data: {
-        judul,
-        address,
-        description,
-        imageUrl,
-        status: status || 'sent', // Default status to 'sent' if not provided
-      },
+      where: { id }, // Gunakan kolom mapped "_id" melalui Prisma
+      data: updateData,
     });
-    res.json({ message: 'Pelaporan updated successfully.', pelaporan });
+
+    res.status(200).json({ message: 'Pelaporan updated successfully.', pelaporan });
   } catch (error) {
+    console.error('Error updating pelaporan:', error.message);
     res.status(500).json({ error: 'Failed to update Pelaporan.', details: error.message });
   }
 });
+
 
 app.delete('/pelaporan/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
     await prisma.pelaporan.delete({
-      where: { id: parseInt(id) },
+      where: { id }, // id adalah UUID (string)
     });
     res.json({ message: 'Pelaporan deleted successfully.' });
   } catch (error) {
+    console.error('Error deleting Pelaporan:', error.message);
     res.status(500).json({ error: 'Failed to delete Pelaporan.', details: error.message });
   }
 });
+
 
 app.get('/pelaporan/:id', async (req, res) => {
   const { id } = req.params;
@@ -488,6 +495,212 @@ app.get('/pelaporan/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch Pelaporan details.', details: error.message });
   }
 });
+
+// Create (POST) a new Penukaran
+app.post('/penukaran', async (req, res) => {
+  try {
+    const { userId, sampahId, bankSampahId, amount, earned } = req.body;
+    const newPenukaran = await prisma.penukaran.create({
+      data: {
+        userId,
+        sampahId,
+        bankSampahId,
+        amount,
+        earned,
+      },
+    });
+    res.status(201).json(newPenukaran);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create penukaran' });
+  }
+});
+
+// GET all penukaran dengan filter berdasarkan status dan tanggal
+app.get('/penukaran', async (req, res) => {
+  try {
+    const { status, dateFrom, dateTo, page, limit } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    const penukarans = await prisma.penukaran.findMany({
+      where: {
+        ...(status && { status }),
+        ...(dateFrom && dateTo && {
+          dateCreated: {
+            gte: new Date(dateFrom),
+            lte: new Date(dateTo),
+          },
+        }),
+      },
+      skip: offset,
+      take: parseInt(limit) || 10,
+    });
+
+    res.status(200).json(penukarans);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch penukaran' });
+  }
+});
+
+// Read (GET) a single Penukaran by ID
+app.get('/penukaran/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const penukaran = await prisma.penukaran.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!penukaran) {
+      return res.status(404).json({ error: 'Penukaran not found' });
+    }
+    res.status(200).json(penukaran);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch penukaran' });
+  }
+});
+
+// Update status penukaran
+
+app.put('/penukaran/:id', async (req, res) => {
+  try {
+    const { id } = req.body;
+    const { status } = req.body;
+
+    // Perbarui status transaksi di database
+    const penukaran = await prisma.penukaran.update({
+      where: { id: id },
+      data: { status: status },
+    });
+
+    // Jika status berubah menjadi "success", perbarui poin pengguna terkait
+    if (status === 'success') {
+      await prisma.user.update({
+        where: { id: penukaran.userId },
+        data: {
+          points: {
+            increment: penukaran.earned, // Tambahkan poin dari penukaran
+          },
+        },
+      });
+    }
+
+    res.status(200).json({ message: 'Status and points updated successfully', penukaran });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update status or points' });
+  }
+});
+
+
+// Delete (DELETE) a Penukaran by ID
+app.delete('/penukaran/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.penukaran.delete({
+      where: { id },
+    });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete penukaran' });
+  }
+});
+
+// CRUD untuk Payment
+app.post('/payment', async (req, res) => {
+  const { userId, tokoId, barangId, totalPrice, pointsUsed, status } = req.body;
+
+  if (!userId || !tokoId || !barangId || totalPrice === undefined) {
+    return res.status(400).json({ error: 'userId, tokoId, barangId, dan totalPrice diperlukan.' });
+  }
+
+  try {
+    const payment = await prisma.payment.create({
+      data: {
+        userId,
+        tokoId,
+        barangId,
+        totalPrice,
+        pointsUsed: pointsUsed || 0,
+        status: status || 'pending',
+      },
+    });
+    res.status(201).json({ message: 'Payment berhasil dibuat.', payment });
+  } catch (error) {
+    res.status(500).json({ error: 'Gagal membuat payment.', details: error.message });
+  }
+});
+
+app.get('/payment', async (req, res) => {
+  try {
+    const payments = await prisma.payment.findMany({
+      include: {
+        user: true,
+        toko: true,
+        barang: true,
+      },
+    });
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({ error: 'Gagal mengambil daftar payment.', details: error.message });
+  }
+});
+
+// Update untuk pembaruan status pembayaran
+app.put('/payment/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, totalPrice } = req.body;
+
+  try {
+    // Cek status pembayaran sebelum melakukan update
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+    });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment tidak ditemukan.' });
+    }
+
+    if (payment.status === 'cancelled') {
+      return res.status(400).json({ error: 'Status sudah cancelled, tidak bisa diubah.' });
+    }
+
+    // Update status pembayaran
+    const updatedPayment = await prisma.payment.update({
+      where: { id },
+      data: { status },
+    });
+
+    // Jika status diubah menjadi "success", kurangi poin pengguna
+    if (status === 'success' && totalPrice) {
+      await prisma.user.update({
+        where: { id: payment.userId },
+        data: {
+          point: {
+            decrement: totalPrice,
+          },
+        },
+      });
+    }
+
+    res.json({ message: 'Payment berhasil diperbarui.', payment: updatedPayment });
+  } catch (error) {
+    res.status(500).json({ error: 'Gagal memperbarui payment.', details: error.message });
+  }
+});
+
+
+app.delete('/payment/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.payment.delete({
+      where: { id },
+    });
+    res.json({ message: 'Payment berhasil dihapus.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Gagal menghapus payment.', details: error.message });
+  }
+});
+
 
 const server = app.listen(3000, () =>
   console.log(`

@@ -22,24 +22,27 @@ model User {
   updatedAt   DateTime    @updatedAt
   Penukaran   Penukaran[]
   Pelaporan   Pelaporan[]
+  Payment     Payment[]
 }
 
 model Toko {
-  id       String   @id @default(uuid()) @map("_id")
+  id       String    @id @default(uuid()) @map("_id")
   nama     String
   alamat   String
   imageUrl String
-  barang   Barang[] @relation("Toko")
+  barang   Barang[]  @relation("Toko")
+  Payment  Payment[]
 }
 
 model Barang {
-  id       String @id @default(uuid()) @map("_id")
+  id       String    @id @default(uuid()) @map("_id")
   nama     String
   harga    Int
   stok     Int
   imageUrl String
-  toko     Toko   @relation("Toko", fields: [tokoId], references: [id])
+  toko     Toko      @relation("Toko", fields: [tokoId], references: [id])
   tokoId   String
+  Payment  Payment[]
 }
 
 model BankSampah {
@@ -85,4 +88,19 @@ model Pelaporan {
   imageUrl    String
   dateCreated DateTime @default(now())
   dateUpdated DateTime @updatedAt
+}
+
+model Payment {
+  id         String   @id @default(uuid()) @map("_id")
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  toko       Toko     @relation(fields: [tokoId], references: [id])
+  tokoId     String
+  barang     Barang   @relation(fields: [barangId], references: [id])
+  barangId   String
+  totalPrice Int
+  pointsUsed Int      @default(0)
+  status     String   @default("pending") // ["pending", "success", "failed"]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
