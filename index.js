@@ -103,6 +103,23 @@ app.get('/users', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch users.', details: error.message });
   }
 });
+
+app.get('/users/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: Number(userId) }
+    });
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user', details: error.message });
+  }
+});
+
 app.put('/users/:id', async (req, res) => {
   const { id } = req.params;
   const { name, email, password, role, phoneNumber, address, age, point, gender } = req.body;
