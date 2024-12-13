@@ -578,32 +578,58 @@ app.get('/penukaran/:id', async (req, res) => {
 // Update status penukaran
 
 app.put('/penukaran/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, earned } = req.body;
+
   try {
-    const { id } = req.body;
-    const { status } = req.body;
+    // Cari penukaran berdasarkan ID
+    const penukaran = await prisma.penukaran.findUnique({
+      where: { id },
+    });
+
+    if (!penukaran) {
+      return res.status(404).json({ error: 'Penukaran tidak ditemukan.' });
+    }
+
+    if (penukaran.status === 'cancelled') {
+      return res.status(400).json({ error: 'Status sudah cancelled, tidak bisa diubah.' });
+    }
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    // Validasi earned
+    if (status === 'success' && (!earned || isNaN(earned) || earned <= 0)) {
+      return res.status(400).json({ error: 'Earned is invalid' });
+    }
 
     // Perbarui status transaksi di database
-    const penukaran = await prisma.penukaran.update({
-      where: { id: id },
-      data: { status: status },
+    const updatedPenukaran = await prisma.penukaran.update({
+      where: { id },
+      data: { status },
     });
 
     // Jika status berubah menjadi "success", perbarui poin pengguna terkait
-    if (status === 'success') {
-      await prisma.user.update({
-        where: { id: penukaran.userId },
+    if (status === 'success' && earned) {
+      const user = await prisma.user.update({
+        where: { id: updatedPenukaran.userId },
         data: {
-          points: {
-            increment: penukaran.earned, // Tambahkan poin dari penukaran
+          point: {
+            increment: earned,
           },
         },
       });
+      console.log('Updated user:', user); // Debug output untuk pengguna
     }
 
-    res.status(200).json({ message: 'Status and points updated successfully', penukaran });
+    res.status(200).json({
+      message: 'Status dan poin berhasil diperbarui',
+      penukaran: updatedPenukaran,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to update status or points' });
+    res.status(500).json({ error: 'Gagal memperbarui status atau poin' });
   }
 });
 
@@ -623,7 +649,7 @@ app.delete('/penukaran/:id', async (req, res) => {
 
 // CRUD untuk Payment
 app.post('/payment', async (req, res) => {
-  const { userId, tokoId, barangId, totalPrice, pointsUsed, status } = req.body;
+  const { userId, tokoId, barangId, totalPrice, Used, status } = req.body;
 
   if (!userId || !tokoId || !barangId || totalPrice === undefined) {
     return res.status(400).json({ error: 'userId, tokoId, barangId, dan totalPrice diperlukan.' });
@@ -636,7 +662,7 @@ app.post('/payment', async (req, res) => {
         tokoId,
         barangId,
         totalPrice,
-        pointsUsed: pointsUsed || 0,
+        Used: Used || 0,
         status: status || 'pending',
       },
     });
