@@ -19,7 +19,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = 'wildanganteng';
+const JWT_SECRET = 'Hesoyam';
 
 app.post('/signup', async (req, res) => {
   const { name, email, password, role, phoneNumber, address, age, point, gender } = req.body;
@@ -440,17 +440,22 @@ app.post('/pelaporan', async (req, res) => {
 });
 
 app.get('/pelaporan', async (req, res) => {
+  const { userId } = req.query; 
+
   try {
     const pelaporans = await prisma.pelaporan.findMany({
+      where: userId ? { userId: parseInt(userId) } : undefined,
       include: {
-        name: true, // Include user info if needed
+        name: true,
       },
     });
     res.json(pelaporans);
   } catch (error) {
+    console.error('Error fetching pelaporan:', error);
     res.status(500).json({ error: 'Failed to fetch Pelaporan.', details: error.message });
   }
 });
+
 
 app.put('/pelaporan/:id', async (req, res) => {
   const { id } = req.params; // UUID tetap dalam format string
@@ -535,11 +540,12 @@ app.post('/penukaran', async (req, res) => {
 // GET all penukaran dengan filter berdasarkan status dan tanggal
 app.get('/penukaran', async (req, res) => {
   try {
-    const { status, dateFrom, dateTo, page, limit } = req.query;
+    const { status, dateFrom, dateTo, page, limit, userId } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
     const penukarans = await prisma.penukaran.findMany({
       where: {
+        ...(userId && { userId: parseInt(userId) }), // Filter berdasarkan userId
         ...(status && { status }),
         ...(dateFrom && dateTo && {
           dateCreated: {
@@ -548,16 +554,23 @@ app.get('/penukaran', async (req, res) => {
           },
         }),
       },
+      include: {
+        name: true,
+        category: true,
+        bankSampah: true,
+      },
       skip: offset,
       take: parseInt(limit) || 10,
     });
 
     res.status(200).json(penukarans);
   } catch (error) {
-    console.error(error);
+    console.error('Error in /penukaran:', error); // Tambahkan log error
     res.status(500).json({ error: 'Failed to fetch penukaran' });
   }
 });
+
+
 
 // Read (GET) a single Penukaran by ID
 app.get('/penukaran/:id', async (req, res) => {
@@ -649,7 +662,9 @@ app.delete('/penukaran/:id', async (req, res) => {
 
 // CRUD untuk Payment
 app.post('/payment', async (req, res) => {
-  const { userId, tokoId, barangId, totalPrice, Used, status } = req.body;
+  const { userId, tokoId, barangId, totalPrice } = req.body;
+
+  console.log('Request body:', req.body);
 
   if (!userId || !tokoId || !barangId || totalPrice === undefined) {
     return res.status(400).json({ error: 'userId, tokoId, barangId, dan totalPrice diperlukan.' });
@@ -662,30 +677,35 @@ app.post('/payment', async (req, res) => {
         tokoId,
         barangId,
         totalPrice,
-        Used: Used || 0,
-        status: status || 'pending',
       },
     });
     res.status(201).json({ message: 'Payment berhasil dibuat.', payment });
   } catch (error) {
+    console.error('Error creating payment:', error);
     res.status(500).json({ error: 'Gagal membuat payment.', details: error.message });
   }
 });
 
 app.get('/payment', async (req, res) => {
+  const { userId } = req.query;
+
   try {
     const payments = await prisma.payment.findMany({
+      where: userId ? { userId: parseInt(userId) } : undefined,
       include: {
         user: true,
         toko: true,
         barang: true,
       },
     });
+
     res.json(payments);
   } catch (error) {
+    console.error('Error fetching payments:', error);
     res.status(500).json({ error: 'Gagal mengambil daftar payment.', details: error.message });
   }
 });
+
 
 // Update untuk pembaruan status pembayaran
 app.put('/payment/:id', async (req, res) => {
