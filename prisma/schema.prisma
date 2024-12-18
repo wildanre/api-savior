@@ -3,17 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model Account {
-  id        String   @id @default(cuid())
-  userId    Int // Relasi ke tabel User
-  createdAt DateTime @default(now()) // Waktu pembuatan akun
-  updatedAt DateTime @updatedAt // Waktu terakhir diperbarui
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -32,7 +24,6 @@ model User {
   Penukaran   Penukaran[]
   Pelaporan   Pelaporan[]
   Payment     Payment[]
-  accounts    Account[] 
 }
 
 model Toko {
