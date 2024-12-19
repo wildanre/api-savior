@@ -21,6 +21,13 @@ app.use(express.json());
 
 const JWT_SECRET = 'Hesoyam';
 
+app.get('/', (req, res) => {
+  res.send(`
+    <h1>Welcome to API Service</h1>
+    <p>API Documentation: <a href="https://github.com/wildanre/api-savior.git" target="_blank">https://github.com/wildanre/api-savior.git</a></p>
+  `);
+});
+
 app.post('/signup', async (req, res) => {
   const { name, email, password, role, phoneNumber, address, age, point, gender } = req.body;
 
@@ -440,7 +447,7 @@ app.post('/pelaporan', async (req, res) => {
 });
 
 app.get('/pelaporan', async (req, res) => {
-  const { userId } = req.query; 
+  const { userId } = req.query;
 
   try {
     const pelaporans = await prisma.pelaporan.findMany({
