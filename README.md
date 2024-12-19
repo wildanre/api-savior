@@ -1,3 +1,408 @@
+# API Documentation
+
+# API Documentation
+
+This document provides details about the API endpoints for managing users, stores, items, transactions, reports, and more using Express.js and Prisma.
+
+## Base URL
+
+```
+http://localhost:3000
+```
+
+---
+
+## Authentication
+
+### POST `/signup`
+
+Create a new user.
+
+**Request Body**:
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "user",
+  "phoneNumber": "1234567890",
+  "address": "123 Main St",
+  "age": 30,
+  "point": 0,
+  "gender": "male"
+}
+```
+
+**Response**:
+
+- `201 Created`: User created successfully.
+- `400 Bad Request`: Missing required fields.
+- `500 Internal Server Error`: User creation failed.
+
+---
+
+### POST `/login`
+
+Login a user and generate a JWT token.
+
+**Request Body**:
+
+```json
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+**Response**:
+
+- `200 OK`: Login successful, returns a JWT token and user info.
+- `400 Bad Request`: Missing email or password.
+- `401 Unauthorized`: Invalid credentials.
+- `404 Not Found`: User not found.
+- `500 Internal Server Error`: Login failed.
+
+---
+
+## User CRUD Endpoints
+
+### GET `/users`
+
+Fetch all users.
+
+**Response**:
+
+- `200 OK`: Returns an array of users.
+- `500 Internal Server Error`: Failed to fetch users.
+
+---
+
+### GET `/users/:userId`
+
+Fetch a specific user by `userId`.
+
+**Response**:
+
+- `200 OK`: Returns the user object.
+- `404 Not Found`: User not found.
+- `500 Internal Server Error`: Failed to fetch user.
+
+---
+
+### PUT `/users/:id`
+
+Update user details.
+
+**Request Body**:
+
+```json
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "newpassword123",
+  "role": "admin",
+  "phoneNumber": "9876543210",
+  "address": "456 Another St",
+  "age": 35,
+  "point": 10,
+  "gender": "male"
+}
+```
+
+**Response**:
+
+- `200 OK`: User updated successfully.
+- `500 Internal Server Error`: Failed to update user.
+
+---
+
+### DELETE `/users/:id`
+
+Delete a user by `id`.
+
+**Response**:
+
+- `200 OK`: User deleted successfully.
+- `500 Internal Server Error`: Failed to delete user.
+
+---
+
+## Store CRUD Endpoints
+
+### POST `/toko`
+
+Create a new store.
+
+**Request Body**:
+
+```json
+{
+  "nama": "Store Name",
+  "alamat": "Store Address",
+  "imageUrl": "https://example.com/store.jpg"
+}
+```
+
+**Response**:
+
+- `201 Created`: Store created successfully.
+- `400 Bad Request`: Missing required fields.
+- `500 Internal Server Error`: Failed to create store.
+
+---
+
+### GET `/toko`
+
+Fetch all stores.
+
+**Response**:
+
+- `200 OK`: Returns an array of stores.
+- `500 Internal Server Error`: Failed to fetch stores.
+
+---
+
+### PUT `/toko/:id`
+
+Update store details.
+
+**Request Body**:
+
+```json
+{
+  "nama": "Updated Store Name",
+  "alamat": "Updated Store Address",
+  "imageUrl": "https://example.com/updated-store.jpg"
+}
+```
+
+**Response**:
+
+- `200 OK`: Store updated successfully.
+- `500 Internal Server Error`: Failed to update store.
+
+---
+
+### DELETE `/toko/:id`
+
+Delete a store by `id`.
+
+**Response**:
+
+- `200 OK`: Store deleted successfully.
+- `500 Internal Server Error`: Failed to delete store.
+
+---
+
+## Item CRUD Endpoints
+
+### POST `/barang`
+
+Create a new item for a store.
+
+**Request Body**:
+
+```json
+{
+  "nama": "Item Name",
+  "harga": 100,
+  "stok": 20,
+  "imageUrl": "https://example.com/item.jpg",
+  "tokoId": 1
+}
+```
+
+**Response**:
+
+- `201 Created`: Item created successfully.
+- `400 Bad Request`: Missing required fields.
+- `500 Internal Server Error`: Failed to create item.
+
+---
+
+### GET `/barang`
+
+Fetch all items.
+
+**Response**:
+
+- `200 OK`: Returns an array of items.
+- `500 Internal Server Error`: Failed to fetch items.
+
+---
+
+### PUT `/barang/:id`
+
+Update item details.
+
+**Request Body**:
+
+```json
+{
+  "nama": "Updated Item Name",
+  "harga": 150,
+  "stok": 30,
+  "imageUrl": "https://example.com/updated-item.jpg"
+}
+```
+
+**Response**:
+
+- `200 OK`: Item updated successfully.
+- `500 Internal Server Error`: Failed to update item.
+
+---
+
+### DELETE `/barang/:id`
+
+Delete an item by `id`.
+
+**Response**:
+
+- `200 OK`: Item deleted successfully.
+- `500 Internal Server Error`: Failed to delete item.
+
+---
+
+## Bank Sampah CRUD Endpoints
+
+### POST `/bank-sampah`
+
+Create a new Bank Sampah.
+
+**Request Body**:
+
+```json
+{
+  "name": "Bank Sampah Name",
+  "location": "Bank Sampah Location"
+}
+```
+
+**Response**:
+
+- `201 Created`: Bank Sampah created successfully.
+- `400 Bad Request`: Missing required fields.
+- `500 Internal Server Error`: Failed to create Bank Sampah.
+
+---
+
+### GET `/bank-sampah`
+
+Fetch all Bank Sampah.
+
+**Response**:
+
+- `200 OK`: Returns an array of Bank Sampah.
+- `500 Internal Server Error`: Failed to fetch Bank Sampah.
+
+---
+
+### PUT `/bank-sampah/:id`
+
+Update Bank Sampah details.
+
+**Request Body**:
+
+```json
+{
+  "name": "Updated Bank Sampah Name",
+  "location": "Updated Bank Sampah Location"
+}
+```
+
+**Response**:
+
+- `200 OK`: Bank Sampah updated successfully.
+- `500 Internal Server Error`: Failed to update Bank Sampah.
+
+---
+
+### DELETE `/bank-sampah/:id`
+
+Delete a Bank Sampah by `id`.
+
+**Response**:
+
+- `200 OK`: Bank Sampah deleted successfully.
+- `500 Internal Server Error`: Failed to delete Bank Sampah.
+
+---
+
+## Sampah CRUD Endpoints
+
+### POST `/sampah`
+
+Create a new Sampah category.
+
+**Request Body**:
+
+```json
+{
+  "category": "Plastic",
+  "price": 100,
+  "bankSampahId": 1
+}
+```
+
+**Response**:
+
+- `201 Created`: Sampah created successfully.
+- `400 Bad Request`: Missing required fields.
+- `500 Internal Server Error`: Failed to create Sampah.
+
+---
+
+### GET `/sampah`
+
+Fetch all Sampah categories.
+
+**Response**:
+
+- `200 OK`: Returns an array of Sampah.
+- `500 Internal Server Error`: Failed to fetch Sampah.
+
+---
+
+### PUT `/sampah/:id`
+
+Update Sampah details.
+
+**Request Body**:
+
+```json
+{
+  "category": "Updated Plastic",
+  "price": 120
+}
+```
+
+**Response**:
+
+- `200 OK`: Sampah updated successfully.
+- `500 Internal Server Error`: Failed to update Sampah.
+
+---
+
+### DELETE `/sampah/:id`
+
+Delete a Sampah category by `id`.
+
+**Response**:
+
+- `200 OK`: Sampah deleted successfully.
+- `500 Internal Server Error`: Failed to delete Sampah.
+
+---
+
+## Pelaporan CRUD Endpoints
+
+### POST `/pelaporan`
+
+Create a new report.
+
+
 # REST API Example
 
 This example shows how to implement a **REST API with TypeScript** using [Express](https://expressjs.com/) and [Prisma Client](https://www.prisma.io/docs/concepts/components/prisma-client). The example uses an SQLite database file with some initial dummy data which you can find at [`./prisma/dev.db`](./prisma/dev.db).
