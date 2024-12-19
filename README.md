@@ -1,13 +1,12 @@
 # API Documentation
 
-# API Documentation
 
 This document provides details about the API endpoints for managing users, stores, items, transactions, reports, and more using Express.js and Prisma.
 
 ## Base URL
 
 ```
-http://localhost:3000
+https://api-savior.vercel.app
 ```
 
 ---
